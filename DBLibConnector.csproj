@@ -1,121 +1,135 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-  <TargetFramework>net10.0</TargetFramework>
-  <ImplicitUsings>enable</ImplicitUsings>
-  <Nullable>enable</Nullable>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
 
-  <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
 
-  <!-- default build dir local -->
-  <StageDir>$(MSBuildProjectDirectory)\build\</StageDir>
+    <!-- Local staging directory -->
+    <StageDir>$(MSBuildProjectDirectory)/build/</StageDir>
 
-  <!-- my cs2 instance cs# dir for testing -->
-  <CSSDir>/hdd/cs2server/Counter-Strike Global Offensive/game/csgo/addons/counterstrikesharp/</CSSDir>
+    <!-- Uncomment for development -->
+    <!--
+    <CSSDir>/hdd/cs2server/Counter-Strike Global Offensive/game/csgo/addons/counterstrikesharp/</CSSDir>
+    -->
 
-  <PluginName>DBLibConnector</PluginName>
+    <PluginName>DBLibConnector</PluginName>
   </PropertyGroup>
 
   <ItemGroup>
-  <PackageReference Include="CounterStrikeSharp.API" Version="1.0.378" />
-  <PackageReference Include="linq2db" Version="6.5.1" />
-  <PackageReference Include="linq2db.MySql" Version="6.5.1" />
-  <PackageReference Include="linq2db.PostgreSQL" Version="6.5.1" />
-  <PackageReference Include="MySqlConnector" Version="2.6.2" />
-  <PackageReference Include="Npgsql" Version="10.0.3" />
-  <PackageReference Include="CounterStrikeSharpDBLib" Version="0.0.1" />
+    <PackageReference Include="CounterStrikeSharp.API" Version="1.0.378" />
+    <PackageReference Include="linq2db" Version="6.5.1" />
+    <PackageReference Include="linq2db.MySql" Version="6.5.1" />
+    <PackageReference Include="linq2db.PostgreSQL" Version="6.5.1" />
+    <PackageReference Include="MySqlConnector" Version="2.6.2" />
+    <PackageReference Include="Npgsql" Version="10.0.3" />
+    <PackageReference Include="CounterStrikeSharpDBLib" Version="0.0.1" />
   </ItemGroup>
 
-  <!-- Release: stage files locally in build/ -->
-<Target Name="StageForServer" AfterTargets="Build"
-    Condition="'$(Configuration)' == 'Release'">
+  <!-- Release: stage files in build/ only -->
+  <Target Name="StageForRelease"
+          AfterTargets="Build"
+          Condition="'$(Configuration)' == 'Release'">
 
-  <PropertyGroup>
-  <PluginStageDir>$(StageDir)plugins/$(PluginName)/</PluginStageDir>
-  <SharedDBLibDir>$(StageDir)shared/DBLib/</SharedDBLibDir>
-  <SharedLinq2dbDir>$(StageDir)shared/linq2db/</SharedLinq2dbDir>
-  </PropertyGroup>
+    <PropertyGroup>
+      <PluginStageDir>$(StageDir)plugins/$(PluginName)/</PluginStageDir>
+      <SharedDBLibDir>$(StageDir)shared/DBLib/</SharedDBLibDir>
+      <SharedLinq2dbDir>$(StageDir)shared/linq2db/</SharedLinq2dbDir>
+    </PropertyGroup>
 
-  <ItemGroup>
-  <_PluginFiles Include="$(OutDir)DBLibConnector.dll" />
-  <_PluginFiles Include="$(OutDir)DBLibConnector.pdb"
-          Condition="Exists('$(OutDir)DBLibConnector.pdb')" />
-  <_PluginFiles Include="$(OutDir)DBLibConnector.deps.json"
-          Condition="Exists('$(OutDir)DBLibConnector.deps.json')" />
-  <_PluginFiles Include="$(OutDir)Npgsql.dll" />
-  <_PluginFiles Include="$(OutDir)MySqlConnector.dll" />
+    <ItemGroup>
+      <_PluginFiles Include="$(OutDir)DBLibConnector.dll" />
+      <_PluginFiles Include="$(OutDir)DBLibConnector.pdb"
+                    Condition="Exists('$(OutDir)DBLibConnector.pdb')" />
+      <_PluginFiles Include="$(OutDir)DBLibConnector.deps.json"
+                    Condition="Exists('$(OutDir)DBLibConnector.deps.json')" />
+      <_PluginFiles Include="$(OutDir)Npgsql.dll" />
+      <_PluginFiles Include="$(OutDir)MySqlConnector.dll" />
 
-  <_SharedContracts Include="$(OutDir)DBLib.dll" />
-  <_SharedLinq2db Include="$(OutDir)linq2db.dll" />
+      <_SharedContracts Include="$(OutDir)DBLib.dll" />
+      <_SharedLinq2db Include="$(OutDir)linq2db.dll" />
 
-  <_PluginRuntimes Include="$(OutDir)runtimes/**/*"
-            Condition="Exists('$(OutDir)runtimes')" />
-  </ItemGroup>
+      <_PluginRuntimes Include="$(OutDir)runtimes/**/*"
+                       Condition="Exists('$(OutDir)runtimes')" />
+    </ItemGroup>
 
-  <MakeDir Directories="$(PluginStageDir);
-            $(SharedDBLibDir);
-            $(SharedLinq2dbDir)" />
+    <MakeDir Directories="$(PluginStageDir);
+                          $(SharedDBLibDir);
+                          $(SharedLinq2dbDir)" />
 
-  <Copy SourceFiles="@(_PluginFiles)"
-    DestinationFolder="$(PluginStageDir)"
-    SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_PluginFiles)"
+          DestinationFolder="$(PluginStageDir)"
+          SkipUnchangedFiles="true" />
 
-  <Copy SourceFiles="@(_PluginRuntimes)"
-    DestinationFiles="@(_PluginRuntimes->'$(PluginStageDir)runtimes/%(RecursiveDir)%(Filename)%(Extension)')"
-    SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_PluginRuntimes)"
+          DestinationFiles="@(_PluginRuntimes->'$(PluginStageDir)runtimes/%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
 
-  <Copy SourceFiles="@(_SharedContracts)"
-    DestinationFolder="$(SharedDBLibDir)"
-    SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_SharedContracts)"
+          DestinationFolder="$(SharedDBLibDir)"
+          SkipUnchangedFiles="true" />
 
-  <Copy SourceFiles="@(_SharedLinq2db)"
-    DestinationFolder="$(SharedLinq2dbDir)"
-    SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_SharedLinq2db)"
+          DestinationFolder="$(SharedLinq2dbDir)"
+          SkipUnchangedFiles="true" />
 
-  <Message Importance="high"
-       Text="Staged $(PluginName) to $(StageDir)" />
+    <Message Importance="high"
+             Text="Staged $(PluginName) to $(StageDir)" />
 
-</Target>
-<!-- Debug: deploy directly to the CounterStrikeSharp server -->
-<Target Name="DeployToServer" AfterTargets="Build"
-    Condition="'$(Configuration)' == 'Debug'
-           And '$(CSSDir)' != ''">
-  <PropertyGroup>
-  <PluginDeployDir>$(CSSDir)plugins/$(PluginName)/</PluginDeployDir>
-  <SharedDBLibDeployDir>$(CSSDir)shared/DBLib/</SharedDBLibDeployDir>
-  <SharedLinq2dbDeployDir>$(CSSDir)shared/linq2db/</SharedLinq2dbDeployDir>
-  </PropertyGroup>
-  <ItemGroup>
-  <_DeployPluginFiles Include="$(OutDir)DBLibConnector.dll" />
-  <_DeployPluginFiles Include="$(OutDir)DBLibConnector.pdb"
-            Condition="Exists('$(OutDir)DBLibConnector.pdb')" />
-  <_DeployPluginFiles Include="$(OutDir)DBLibConnector.deps.json"
-            Condition="Exists('$(OutDir)DBLibConnector.deps.json')" />
-  <_DeployPluginFiles Include="$(OutDir)Npgsql.dll" />
-  <_DeployPluginFiles Include="$(OutDir)MySqlConnector.dll" />
-  <_DeploySharedContracts Include="$(OutDir)DBLib.dll" />
-  <_DeploySharedLinq2db Include="$(OutDir)linq2db.dll" />
-  <_DeployRuntimes Include="$(OutDir)runtimes/**/*"
-           Condition="Exists('$(OutDir)runtimes')" />
-  </ItemGroup>
-  <MakeDir Directories="$(PluginDeployDir);
-            $(SharedDBLibDeployDir);
-            $(SharedLinq2dbDeployDir)" />
-  <Copy SourceFiles="@(_DeployPluginFiles)"
-    DestinationFolder="$(PluginDeployDir)"
-    SkipUnchangedFiles="false" />
-  <Copy SourceFiles="@(_DeployRuntimes)"
-    DestinationFiles="@(_DeployRuntimes->'$(PluginDeployDir)runtimes/%(RecursiveDir)%(Filename)%(Extension)')"
-    SkipUnchangedFiles="false" />
-  <Copy SourceFiles="@(_DeploySharedContracts)"
-    DestinationFolder="$(SharedDBLibDeployDir)"
-    SkipUnchangedFiles="false" />
-  <Copy SourceFiles="@(_DeploySharedLinq2db)"
-    DestinationFolder="$(SharedLinq2dbDeployDir)"
-    SkipUnchangedFiles="false" />
-  <Message Importance="high"
-       Text="Deployed $(PluginName) to $(CSSDir)" />
-</Target>
+  </Target>
 
+  <!-- Debug: deploy directly to the local CS2 server only -->
+  <Target Name="DeployToServer"
+          AfterTargets="Build"
+          Condition="'$(Configuration)' == 'Debug' And '$(CSSDir)' != ''">
+
+    <PropertyGroup>
+      <PluginDeployDir>$(CSSDir)plugins/$(PluginName)/</PluginDeployDir>
+      <SharedDBLibDeployDir>$(CSSDir)shared/DBLib/</SharedDBLibDeployDir>
+      <SharedLinq2dbDeployDir>$(CSSDir)shared/linq2db/</SharedLinq2dbDeployDir>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <_DeployPluginFiles Include="$(OutDir)DBLibConnector.dll" />
+      <_DeployPluginFiles Include="$(OutDir)DBLibConnector.pdb"
+                          Condition="Exists('$(OutDir)DBLibConnector.pdb')" />
+      <_DeployPluginFiles Include="$(OutDir)DBLibConnector.deps.json"
+                          Condition="Exists('$(OutDir)DBLibConnector.deps.json')" />
+      <_DeployPluginFiles Include="$(OutDir)Npgsql.dll" />
+      <_DeployPluginFiles Include="$(OutDir)MySqlConnector.dll" />
+
+      <_DeploySharedContracts Include="$(OutDir)DBLib.dll" />
+      <_DeploySharedLinq2db Include="$(OutDir)linq2db.dll" />
+
+      <_DeployRuntimes Include="$(OutDir)runtimes/**/*"
+                       Condition="Exists('$(OutDir)runtimes')" />
+    </ItemGroup>
+
+    <MakeDir Directories="$(PluginDeployDir);
+                          $(SharedDBLibDeployDir);
+                          $(SharedLinq2dbDeployDir)" />
+
+    <Copy SourceFiles="@(_DeployPluginFiles)"
+          DestinationFolder="$(PluginDeployDir)"
+          SkipUnchangedFiles="false" />
+
+    <Copy SourceFiles="@(_DeployRuntimes)"
+          DestinationFiles="@(_DeployRuntimes->'$(PluginDeployDir)runtimes/%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="false" />
+
+    <Copy SourceFiles="@(_DeploySharedContracts)"
+          DestinationFolder="$(SharedDBLibDeployDir)"
+          SkipUnchangedFiles="false" />
+
+    <Copy SourceFiles="@(_DeploySharedLinq2db)"
+          DestinationFolder="$(SharedLinq2dbDeployDir)"
+          SkipUnchangedFiles="false" />
+
+    <Message Importance="high"
+             Text="Deployed $(PluginName) to $(CSSDir)" />
+
+  </Target>
 
 </Project>
