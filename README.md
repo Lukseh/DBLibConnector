@@ -1,6 +1,6 @@
 # DBLibConnector
 
-Connector plugin for DBLib
+Connector plugin for [DBLib](https://github.com/Lukseh/DBLib)
 
 It opens, manages and exposes interface to interact with shared database instance between CS# plugins
 
