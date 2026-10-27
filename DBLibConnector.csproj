@@ -1,0 +1,107 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+  <TargetFramework>net10.0</TargetFramework>
+  <ImplicitUsings>enable</ImplicitUsings>
+  <Nullable>enable</Nullable>
+
+  <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+
+  <!-- default build dir local -->
+  <StageDir>$(MSBuildProjectDirectory)\build\</StageDir>
+
+  <!-- my cs2 instance cs# dir for testing -->
+  <CSSDir>/hdd/cs2server/Counter-Strike Global Offensive/game/csgo/addons/counterstrikesharp/</CSSDir>
+
+  <PluginName>DBLibConnector</PluginName>
+  </PropertyGroup>
+
+  <ItemGroup>
+  <PackageReference Include="CounterStrikeSharp.API" Version="1.0.378" />
+  <PackageReference Include="linq2db" Version="6.5.1" />
+  <PackageReference Include="linq2db.MySql" Version="6.5.1" />
+  <PackageReference Include="linq2db.PostgreSQL" Version="6.5.1" />
+  <PackageReference Include="MySqlConnector" Version="2.6.2" />
+  <PackageReference Include="Npgsql" Version="10.0.3" />
+  <PackageReference Include="CounterStrikeSharpDBLib" Version="0.0.1" />
+  </ItemGroup>
+
+  <Target Name="StageForServer" AfterTargets="Build"
+      Condition="'$(Configuration)' == 'Release'">
+
+  <PropertyGroup>
+    <PluginStageDir>$(StageDir)plugins/$(PluginName)/</PluginStageDir>
+    <SharedDBLibDir>$(StageDir)shared/DBLib/</SharedDBLibDir>
+    <SharedLinq2dbDir>$(StageDir)shared/linq2db/</SharedLinq2dbDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Files private to this plugin -->
+    <_PluginFiles Include="$(OutDir)DBLibConnector.dll" />
+    <_PluginFiles Include="$(OutDir)DBLibConnector.pdb"
+          Condition="Exists('$(OutDir)DBLibConnector.pdb')" />
+    <_PluginFiles Include="$(OutDir)DBLibConnector.deps.json"
+          Condition="Exists('$(OutDir)DBLibConnector.deps.json')" />
+    <_PluginFiles Include="$(OutDir)Npgsql.dll" />
+    <_PluginFiles Include="$(OutDir)MySqlConnector.dll" />
+
+    <!-- Shared dependencies -->
+    <_SharedContracts Include="$(OutDir)DBLib.dll" />
+    <_SharedLinq2db Include="$(OutDir)linq2db.dll" />
+
+    <!-- Preserve runtime-specific native or managed dependencies -->
+    <_PluginRuntimes Include="$(OutDir)runtimes/**/*"
+            Condition="Exists('$(OutDir)runtimes')" />
+  </ItemGroup>
+
+  <!-- Create directories without removing existing contents -->
+  <MakeDir Directories="$(PluginStageDir);
+              $(SharedDBLibDir);
+              $(SharedLinq2dbDir)" />
+
+  <!-- Stage plugin files -->
+  <Copy SourceFiles="@(_PluginFiles)"
+      DestinationFolder="$(PluginStageDir)"
+      SkipUnchangedFiles="true" />
+
+  <Copy SourceFiles="@(_PluginRuntimes)"
+      DestinationFiles="@(_PluginRuntimes->'$(PluginStageDir)runtimes/%(RecursiveDir)%(Filename)%(Extension)')"
+      SkipUnchangedFiles="true" />
+
+  <!-- Stage shared assemblies -->
+  <Copy SourceFiles="@(_SharedContracts)"
+      DestinationFolder="$(SharedDBLibDir)"
+      SkipUnchangedFiles="true" />
+
+  <Copy SourceFiles="@(_SharedLinq2db)"
+      DestinationFolder="$(SharedLinq2dbDir)"
+      SkipUnchangedFiles="true" />
+
+  <!-- Deploy only the files belonging to this plugin -->
+  <MakeDir Directories="$(CSSDir)plugins/$(PluginName);
+              $(CSSDir)shared/DBLib;
+              $(CSSDir)shared/linq2db" />
+
+  <Copy SourceFiles="@(_PluginFiles)"
+      DestinationFolder="$(CSSDir)plugins/$(PluginName)"
+      SkipUnchangedFiles="false" />
+
+  <Copy SourceFiles="@(_PluginRuntimes)"
+      DestinationFiles="@(_PluginRuntimes->'$(CSSDir)plugins/$(PluginName)/runtimes/%(RecursiveDir)%(Filename)%(Extension)')"
+      SkipUnchangedFiles="false" />
+
+  <Copy SourceFiles="@(_SharedContracts)"
+      DestinationFolder="$(CSSDir)shared/DBLib"
+      SkipUnchangedFiles="false" />
+
+  <Copy SourceFiles="@(_SharedLinq2db)"
+      DestinationFolder="$(CSSDir)shared/linq2db"
+      SkipUnchangedFiles="false" />
+
+  <Message Importance="high"
+      Text="Deployed $(PluginName) to $(CSSDir)" />
+
+  </Target>
+
+
+</Project>
